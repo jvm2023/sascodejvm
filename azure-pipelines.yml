@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: terraform-sp-auth
+
+steps:
+  - checkout: self
+
+  - script: |
+      echo "Installing Terraform v1.1.1..."
+      wget https://releases.hashicorp.com/terraform/1.1.1/terraform_1.1.1_linux_amd64.zip
+      unzip terraform_1.1.1_linux_amd64.zip
+      sudo mv terraform /usr/local/bin/
+      terraform -version
+    displayName: 'Install Terraform 1.1.1'
+
+  - script: terraform init -reconfigure
+    displayName: 'Terraform Init (Reconfigure Backend)'
+    env:
+      ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+  - script: terraform plan -out=tfplan
+    displayName: 'Terraform Plan'
+    env:
+      ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+  - script: terraform apply -auto-approve tfplan
+    displayName: 'Terraform Apply'
+    env:
+      ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+      ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+      ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(ARM_TENANT_ID)
